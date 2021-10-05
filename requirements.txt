@@ -1,0 +1,4 @@
+PySimpleGUI==4.49.0
+openpyxl
+pandas
+numpy
