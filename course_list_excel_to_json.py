@@ -26,7 +26,7 @@ index_to_end_hours = ['09:10', '10:00', '10:50', '11:40', '12:30', '13:20', '14:
 
 
 def fix_time_table_k():
-    with open('../data/course_list.json', mode='r+', encoding='utf8') as io_file:
+    with open('data/course_list.json', mode='r+', encoding='utf8') as io_file:
         course_list = json.load(io_file)
         for course in course_list.values():
             code = course['code']
@@ -105,12 +105,12 @@ def excel_to_json(file_path):
         for i in range(start_index, end_index + 1):
             course_list[course_code]['sections'][course_section]['time_table_index'].append([day_index, i])
 
-    with open('../data/course_list.json', mode='w', encoding='utf8') as out_file:
+    with open('data/course_list.json', mode='w', encoding='utf8') as out_file:
         json.dump(course_list, out_file, indent=4)
 
 
 def fix_lecturer_names():
-    with open('../data/course_list.json', mode='r+', encoding='utf8') as io_file:
+    with open('data/course_list.json', mode='r+', encoding='utf8') as io_file:
         course_list = json.load(io_file)
         for course in course_list.values():
             for k, v in course['sections'].items():
@@ -215,10 +215,10 @@ def fix_new_excel(file_path):
             course_list[course_code]['sections'][course_section]['time_table_index'].append([day_index, i])
             course_list[course_code]['sections'][course_section]['types'].append(class_type)
 
-    with open('../data/course_list.json', mode='w', encoding='utf8') as out_file:
+    with open('data/course_list.json', mode='w', encoding='utf8') as out_file:
         json.dump(course_list, out_file, indent=4)
 
 
 if __name__ == '__main__':
     # excel_to_json('../data/course_list.xlsx')
-    fix_new_excel("../data/course_list_2022_test.xlsx")
+    fix_new_excel("data/course_list_2022_test.xlsx")

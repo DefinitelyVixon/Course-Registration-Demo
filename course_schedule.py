@@ -18,7 +18,7 @@ hours = ['08:30\n09:10', '09:20\n10:00', '10:10\n10:50', '11:00\n11:40', '11:50\
          '14:20\n15:00', '15:10\n15:50', '16:00\n16:40', '16:50\n17:30', '17:40\n18:20', '18:30\n19:10', '19:20\n20:00',
          '20:10\n20:50', '21:00\n21:40']
 weekdays_in_one_line = f'{" " * 15}MON{" " * 11}TUE{" " * 13}WED{" " * 11}THU{" " * 13}FRI{" " * 14}SAT{" " * 13}SUN'
-filename = '../data/course_list.json'
+filename = 'data/course_list.json'
 
 with open(resource_path(filename), mode='r', encoding='utf8') as in_file:
     courses = json.load(in_file)
