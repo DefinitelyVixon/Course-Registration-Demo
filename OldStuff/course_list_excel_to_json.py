@@ -26,7 +26,7 @@ index_to_end_hours = ['09:10', '10:00', '10:50', '11:40', '12:30', '13:20', '14:
 
 
 def fix_time_table_k():
-    with open('data/course_list.json', mode='r+', encoding='utf8') as io_file:
+    with open('../data/course_list.json', mode='r+', encoding='utf8') as io_file:
         course_list = json.load(io_file)
         for course in course_list.values():
             code = course['code']
@@ -50,8 +50,8 @@ def fix_time_table_k():
         json.dump(course_list, io_file, indent=4)
 
 
-def excel_to_json():
-    excel = pd.read_excel('course_list.xlsx').fillna(method='ffill')
+def excel_to_json(file_path):
+    excel = pd.read_excel(file_path).fillna(method='ffill')
     records = excel.to_records()
     course_list = {}
 
@@ -105,12 +105,12 @@ def excel_to_json():
         for i in range(start_index, end_index + 1):
             course_list[course_code]['sections'][course_section]['time_table_index'].append([day_index, i])
 
-    with open('data/course_list.json', mode='w', encoding='utf8') as out_file:
+    with open('../data/course_list.json', mode='w', encoding='utf8') as out_file:
         json.dump(course_list, out_file, indent=4)
 
 
 def fix_lecturer_names():
-    with open('data/course_list.json', mode='r+', encoding='utf8') as io_file:
+    with open('../data/course_list.json', mode='r+', encoding='utf8') as io_file:
         course_list = json.load(io_file)
         for course in course_list.values():
             for k, v in course['sections'].items():
@@ -151,5 +151,74 @@ def fix_time_table():
         json.dump(course_list, io_file, indent=4)
 
 
+def fix_new_excel(file_path):
+    excel = pd.read_excel(file_path).fillna(method='ffill')
+    records = excel.to_records()
+    course_list = {}
+
+    # 1 - "Code - Section"
+    # 2 - Name
+    # 3 - ECTS
+    # 4 - "Day Start - End (Class) Type"
+
+    # 1 - Code
+    # 2 - Name
+    # 3 - Section
+    # 4 - ECTS
+    # 5 - Day
+    # 6,7 - Start, End Hour
+
+    for record in records:
+        if record[1] is np.nan or record[4] == 'null':
+            continue
+        course_code, course_section = record[1].split(" - ")
+        if course_code not in course_list:
+            course_name = record[2]
+            course_credit = int(record[3])
+            course_code_split = course_code.split()
+            course_department = course_code_split[0]
+            course_url = f"https://ce.ieu.edu.tr/en/syllabus/type/read/id/{course_code_split[0]}+{course_code_split[1]}"
+
+            course_list[course_code] = {
+                'code': course_code,
+                'name': course_name,
+                'department': course_department,
+                'credits': course_credit,
+                'url': course_url,
+                'sections': {}
+            }
+        day_split = record[4].split(maxsplit=1)
+        course_day = day_split[0]
+        time_split = day_split[1].split(maxsplit=3)
+
+        interval_start, interval_end = time_split[0], time_split[2]
+
+        if course_section not in course_list[course_code]['sections']:
+            course_list[course_code]['sections'][course_section] = {
+                # "type": course_type,
+                "time_table": [],
+                "time_table_index": [],
+                "types": []
+            }
+        temp = time_split[3][:-1].split("(")
+
+        if temp[0] == "":
+            class_type = temp[1]
+        else:
+            class_type = temp[0]
+
+        day_index = days_to_index[course_day]
+        start_index = hours_to_index[interval_start]
+        end_index = hours_to_index[interval_end]
+
+        for i in range(start_index, end_index + 1):
+            course_list[course_code]['sections'][course_section]['time_table_index'].append([day_index, i])
+            course_list[course_code]['sections'][course_section]['types'].append(class_type)
+
+    with open('../data/course_list.json', mode='w', encoding='utf8') as out_file:
+        json.dump(course_list, out_file, indent=4)
+
+
 if __name__ == '__main__':
-    excel_to_json()
+    # excel_to_json('../data/course_list.xlsx')
+    fix_new_excel("../data/course_list_2022_test.xlsx")

@@ -18,11 +18,10 @@ hours = ['08:30\n09:10', '09:20\n10:00', '10:10\n10:50', '11:00\n11:40', '11:50\
          '14:20\n15:00', '15:10\n15:50', '16:00\n16:40', '16:50\n17:30', '17:40\n18:20', '18:30\n19:10', '19:20\n20:00',
          '20:10\n20:50', '21:00\n21:40']
 weekdays_in_one_line = f'{" " * 15}MON{" " * 11}TUE{" " * 13}WED{" " * 11}THU{" " * 13}FRI{" " * 14}SAT{" " * 13}SUN'
-filename = 'data/course_list.json'
+filename = '../data/course_list.json'
 
 with open(resource_path(filename), mode='r', encoding='utf8') as in_file:
     courses = json.load(in_file)
-
 
 data = [[x['code'], x['name'], x['credits'], x['department']] for x in courses.values()]
 
@@ -78,8 +77,7 @@ filtered_courses = set()
 schedule_column = [[sg.T(weekdays_in_one_line)]] + \
                   [[sg.T(hours[y])] + [
                       sg.Multiline(size=(10, 3), key=(x, y), disabled=True, justification='center', no_scrollbar=True)
-                      for x in range(len(weekdays))]
-                   for y in range(len(hours))]
+                      for x in range(len(weekdays))] for y in range(len(hours))]
 
 layout = [[sg.Column(filter_column), sg.Column(schedule_column, key='_schedule-column_')]]
 window = sg.Window('Weekly Schedule', layout, default_element_size=(12, 1), element_padding=(1, 1),
@@ -88,6 +86,7 @@ window = sg.Window('Weekly Schedule', layout, default_element_size=(12, 1), elem
 while True:
 
     event, values = window.read()
+
 
     def remove_from_table(conflicts):
         for conflict in conflicts:
@@ -100,12 +99,14 @@ while True:
             window['-total_ects-'].update(int(int(values['-total_ects-']) - courses[conflict_code]['credits']))
             window['-selected_table-'].update([x['info'] for x in selected_course_dic.values()])
 
+
     if event in (sg.WIN_CLOSED, 'Exit'):
         break
     elif event == '-search_table-' and len(values['-search_table-']):
         data_selected = [window['-search_table-'].get()[row] for row in values[event]]
         selected_course = courses[data_selected[0][0]]
         sections = selected_course['sections']
+
 
         def values_if_selected(course_key, course_section, return_value):
             button_colors = [('White', 'Green'), ('Black', 'Grey')]
@@ -124,20 +125,23 @@ while True:
             elif return_value == 'bool':
                 return bool(course_exists)
 
+
         def convert_types(types):
             if len(set(types)) > 1:
                 return 'Hybrid'
             else:
                 return types[0]
 
-        section_layout = [[[sg.Text(f'Section {k} | {convert_types(v["types"])} | {v["time_table"]}', expand_x=True),
-                            sg.Button('Select',
-                                      key=f'section-{k}',
-                                      button_color=values_if_selected(selected_course['code'], k, 'button_color'),
-                                      disabled=values_if_selected(selected_course['code'], k, 'disabled'))],
-                           sg.HorizontalSeparator()]
-                          for k, v in sections.items()]
-        section_window = sg.Window('Sections', section_layout)
+
+        section_layout = [[sg.Text(f'Section {k} | {convert_types(v["types"])} | {v["time_table"]}', expand_x=True),
+                           sg.Button('Select',
+                                     key=f'section-{k}',
+                                     button_color=values_if_selected(selected_course['code'], k, 'button_color'),
+                                     disabled=values_if_selected(selected_course['code'], k, 'disabled')),
+                           sg.HorizontalSeparator()] for k, v in sections.items()]
+        section_window = sg.Window('Sections',
+                                   [[sg.Column(section_layout, scrollable=True, vertical_scroll_only=True)]])
+
 
         def add_to_table():
             conflicts = set()
@@ -175,6 +179,7 @@ while True:
                 else:
                     return
             i = 0
+            print(day_hour_indexes)
             for day, hour in day_hour_indexes:
                 window[(day, hour)].update(
                     f'{selected_course["code"]}\n'
@@ -187,8 +192,10 @@ while True:
                          selected_course['credits']],
                 'time_table_index': selected_course['sections'][selected_section_id]['time_table_index']
             }
-            window['-total_ects-'].update(int(int(values['-total_ects-'])+selected_course['credits']))
+            window['-total_ects-'].update(int(int(values['-total_ects-']) + selected_course['credits']))
             window['-selected_table-'].update([x['info'] for x in selected_course_dic.values()])
+
+
         while True:
             event_, values_ = section_window.read()
             if event_ in (sg.WIN_CLOSED, 'Exit'):
